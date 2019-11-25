@@ -33,7 +33,7 @@ library:
 
 tests:
   property-config-test:
-    main:                Spec.hs
+    main:                Tests.hs
     source-dirs:         test
     ghc-options:
     - -threaded
@@ -41,5 +41,9 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - property-config
-    - hspec
+    - aeson-pretty
     - hedgehog
+    - tasty
+    - tasty-discover
+    - tasty-golden
+    - tasty-hunit
