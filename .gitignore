@@ -1,0 +1,4 @@
+.stack-work/
+property-config.cabal
+*~
+dist-newstyle
