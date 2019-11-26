@@ -1,3 +1,3 @@
-# Changelog for property-config
+# Changelog for properties-file
 
 ## Unreleased changes

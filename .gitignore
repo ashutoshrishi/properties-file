@@ -1,4 +1,4 @@
 .stack-work/
-property-config.cabal
+properties-file.cabal
 *~
 dist-newstyle
