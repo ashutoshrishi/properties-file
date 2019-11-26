@@ -1,7 +1,11 @@
 module Data.Properties
-  ( parseFile
-  , parseProps
-  , parseAsJSON
+  (
+    -- * Decoding Properties 
+    decodeFile
+  , decodeProps
+    -- * Decoding haskell values via 'FromJSON'
+  , decodeFileJSON
+    -- * Accessing Properties
   , fetch
   , Properties
   , Value(..)
@@ -20,35 +24,25 @@ import qualified Data.Text.IO                  as TIO
 fetch :: Properties -> Key -> Maybe Value
 fetch = flip Map.lookup
 
--- | Parse properties from a file.
-parseFile :: FilePath -> IO (Either String Properties)
-parseFile f = parseProps <$> TIO.readFile f
+-- | Parse properties from a @.properties@ file.
+decodeFile :: FilePath -> IO (Either String Properties)
+decodeFile f = decodeProps <$> TIO.readFile f
 
--- | Parse properties from given contents.
-parseProps :: Text -> Either String Properties
-parseProps = P.parseOnly properties
+-- | Parse properties directly from the given contents.
+decodeProps :: Text -> Either String Properties
+decodeProps = P.parseOnly properties
 
-------------------------------------------------------------------------------
--- JSON interchange                                                         --
-------------------------------------------------------------------------------
-
--- | Parse a Haskell value which already has a 'A.FromJSON' instance, but use
--- the given 'Properties'.
+-- | Parse a Haskell value which already has a 'A.FromJSON' instance from a
+-- @.properties@ file.
 --
--- The intermediate JSON object is an 'aeson' value and where the toplevel
--- object as no nested objects, and has only strings, numbers, and boolean
+-- The intermediate JSON object is an aeson 'A.Value' and where the toplevel
+-- object has no nested objects, and only strings, numbers, and boolean
 -- fields.
-parseAsJSON :: A.FromJSON a => Properties -> Either String a
-parseAsJSON = resultToEither . A.fromJSON . toJSONObject
+decodeFileJSON :: A.FromJSON a => FilePath -> IO (Either String a)
+decodeFileJSON f = do
+  res <- decodeFile f
+  return $ res >>= resultToEither . A.fromJSON . A.toJSON
 
 resultToEither :: A.Result a -> Either String a
-resultToEither (A.Error msg) = Left msg
-resultToEither (A.Success v) = Right v
-
-toJSONObject :: Properties -> A.Value
-toJSONObject = A.Object . Map.map toJSONValue
-
-toJSONValue :: Value -> A.Value
-toJSONValue (String v) = A.String v
-toJSONValue (Number v) = A.Number v
-toJSONValue (Bool   v) = A.Bool v
+resultToEither (A.Error   msg) = Left msg
+resultToEither (A.Success v  ) = Right v

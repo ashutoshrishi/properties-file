@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications #-}
 module PropertiesSpec where
 
 import           Data.Text                                ( Text )
@@ -20,14 +21,13 @@ test_kplProps =
   goldenVsString "KPL properties" "test/golden/kpl.golden"
     $   BL.pack
     .   show
-    <$> parseFile "test/golden/kpl.properties"
+    <$> decodeFile "test/golden/kpl.properties"
 
 test_kplJSON :: TestTree
 test_kplJSON =
   testCase "KPL properties via JSON" $ do
-    parseResult <- parseFile "test/golden/kpl.properties"
-    let parsed = either error id $ parseResult >>= parseAsJSON :: KPLConfig
-    expected <- either error id . eitherDecode <$> BL.readFile "test/golden/kpl.json"
+    parsed <- decodeFileJSON @KPLConfig "test/golden/kpl.properties"
+    expected <- eitherDecode @KPLConfig <$> BL.readFile "test/golden/kpl.json"
     parsed @?= expected
 
 data KPLConfig = KPLConfig { _AggregationEnabled    :: Bool

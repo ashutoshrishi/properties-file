@@ -1,5 +1,20 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Data.Properties.Parser where
+module Data.Properties.Parser
+  (
+  -- * Types
+    Properties
+  , Property
+  , Key
+  , Value(..)
+  -- * Parsers
+  , properties
+  , property
+  , value
+  , comment
+  , key
+  , delimiter
+  )
+where
 
 
 import           Control.Applicative                      ( (<|>) )
@@ -15,6 +30,8 @@ import qualified Data.HashMap.Strict           as Map
 import           Data.Maybe                               ( catMaybes )
 import           Data.Scientific                          ( Scientific )
 import           Data.Text                                ( Text )
+import qualified Data.Aeson                    as A
+import qualified Data.Aeson.Types              as A
 
 -- | Collection of properties.
 type Properties = Map.HashMap Key Value
@@ -29,6 +46,17 @@ data Value
   | Number !Scientific
   | Bool !Bool
   deriving (Show, Eq)
+
+instance A.FromJSON Value where
+  parseJSON (A.String v) = pure (String v)
+  parseJSON (A.Number v) = pure (Number v)
+  parseJSON (A.Bool   v) = pure (Bool v)
+  parseJSON v            = A.typeMismatch "invalid property value" v
+
+instance A.ToJSON Value where
+  toJSON (String v) = A.String v
+  toJSON (Number v) = A.Number v
+  toJSON (Bool   v) = A.Bool v
 
 properties :: Parser Properties
 properties = Map.fromList . catMaybes <$> P.many' line <?> "Properties"
